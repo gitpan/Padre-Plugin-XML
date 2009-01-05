@@ -3,13 +3,13 @@ package Padre::Plugin::XML;
 use warnings;
 use strict;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use base 'Padre::Plugin';
 use Wx ':everything';
 
 sub padre_interfaces {
-	'Padre::Plugin'   => 0.21,
+	'Padre::Plugin'   => 0.23,
 	'Padre::Document' => 0.21,
 }
 
@@ -26,8 +26,8 @@ sub menu_plugins_simple {
 sub tidy_xml {
 	my ( $self ) = @_;
 	
-	my $src = $self->selected_text;
-	my $doc = $self->selected_document;
+	my $src = $self->current->text;
+	my $doc = $self->current->document;
 	my $code = ( $src ) ? $src : $doc->text_get;
 	
 	return unless ( defined $code and length($code) );
@@ -38,7 +38,7 @@ sub tidy_xml {
 	
 	my $string = $tidy_obj->toString();
 	if ( $src ) {
-		my $editor = $self->selected_editor;
+		my $editor = $self->current->editor;
 		$editor->ReplaceSelection( $string );
 	} else {
 		$doc->text_set( $string );
