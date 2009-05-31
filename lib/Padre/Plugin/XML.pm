@@ -3,10 +3,10 @@ package Padre::Plugin::XML;
 use warnings;
 use strict;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use base 'Padre::Plugin';
-use Wx ':everything';
+use Padre::Wx ();
 
 sub padre_interfaces {
 	'Padre::Plugin'   => 0.26,
