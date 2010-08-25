@@ -3,24 +3,24 @@ package Padre::Plugin::XML;
 use warnings;
 use strict;
 
-our $VERSION = '0.06';
+our $VERSION = '0.10';
 
 use base 'Padre::Plugin';
 use Padre::Wx ();
 
 sub padre_interfaces {
-	'Padre::Plugin'   => 0.26,
-	'Padre::Document' => 0.21,
+	'Padre::Plugin'   => 0.65,
+	'Padre::Document' => 0.65,
 }
 
 sub registered_documents {
-	'text/xml' => 'Padre::Document::XML',
+	'text/xml' => 'Padre::Plugin::XML::Document',
 }
 
 sub menu_plugins_simple {
 	my $self = shift;
 	return ('XML' => [
-		'Tidy XML', sub { $self->tidy_xml },
+		Wx::gettext('Tidy XML'), sub { $self->tidy_xml },
 	]);
 }
 

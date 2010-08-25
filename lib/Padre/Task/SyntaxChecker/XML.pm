@@ -1,11 +1,10 @@
-
 package Padre::Task::SyntaxChecker::XML;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.10';
 
-use base 'Padre::Task::SyntaxChecker';
+use base 'Padre::Task::Syntax';
 use XML::LibXML;
 
 =pod
@@ -20,32 +19,33 @@ Padre::Task::SyntaxChecker::XML - XML document syntax-checking in the background
   # will be fetched as will the document's notebook page.
   my $task = Padre::Task::SyntaxChecker::XML->new();
   $task->schedule;
-  
+
   my $task2 = Padre::Task::SyntaxChecker::XML->new(
-    text => Padre::Documents->current->text_get,
-    notebook_page => Padre::Documents->current->editor,
-    on_finish => sub { my $task = shift; ... },
+    text          => Padre::Documents->current->text_get,
+    filename      => Padre::Documents->current->editor->{Document}->filename,
+    on_finish     => sub { my $task = shift; ... },
   );
   $task2->schedule;
 
 =head1 DESCRIPTION
 
 This class implements syntax checking of XML documents in
-the background. It inherits from L<Padre::Task::SyntaxChecker>.
+the background. It inherits from L<Padre::Task::Syntax>.
 Please read its documentation!
 
 =cut
 
+=for cmt
 sub run {
 	my $self = shift;
 	$self->_check_syntax();
 	return 1;
 }
+=cut
 
-sub _check_syntax {
-	my $self = shift;
-
-	my $base_uri = $self->{filename};
+sub _valid {
+	my $base_uri = shift;
+	my $text = shift;
 
 	my $validator = XML::LibXML->new();
 	$validator->validation(0);
@@ -56,31 +56,40 @@ sub _check_syntax {
 
 	my $doc = '';
 	eval {
-		$doc = $validator->parse_string( $self->{text}, $base_uri );
+		$doc = $validator->parse_string($text , $base_uri );
 	};
 
 	if ($@) {
 		# parser error
-		$self->{syntax_check} = _parse_msg( $@, $base_uri );
+		return _parse_msg( $@, $base_uri );
 	}
 	else {
 		if ( $doc->internalSubset() ) {
 			$validator->validation(1);
 			eval {
-				$doc = $validator->parse_string( $self->{text}, $base_uri );
+				$doc = $validator->parse_string( $text, $base_uri );
 			};
 			if ($@) {
 				# validation error
-				$self->{syntax_check} = _parse_msg( $@, $base_uri );
+				return _parse_msg( $@, $base_uri );
 			}
 			else {
-				$self->{syntax_check} = [];
+				return [];
 			}
 		}
 		else {
-			$self->{syntax_check} = [];
+			 return [];
 		}
 	}
+
+}
+
+sub _check_syntax {
+	my $self = shift;
+
+	my $base_uri = $self->{filename};
+
+	$self->{syntax_check} = _valid ($base_uri, $self->{text});
 
 	return;
 }
@@ -112,13 +121,23 @@ sub _parse_msg {
 	return $issues;
 }
 
+sub syntax {
+	my $self = shift;
+	my $text = shift;
+	if (not $self->{filename}) {
+		print "error - no filename\n";
+	}
+	my $base_uri = $self->{filename};
+
+	return _valid($base_uri, $text);
+}
 1;
 
 __END__
 
 =head1 SEE ALSO
 
-This class inherits from L<Padre::Task::SyntaxChecker> which
+This class inherits from L<Padre::Task::Syntax> which
 in turn is a L<Padre::Task> and its instances can be scheduled
 using L<Padre::TaskManager>.
 
@@ -132,6 +151,7 @@ Heiko Jansen, C<< <heiko_jansen@web.de> >>
 =head1 COPYRIGHT AND LICENSE
 
 Copyright 2008 Heiko Jansen
+Copyright 2010 Alexandr Ciornii
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl 5 itself.

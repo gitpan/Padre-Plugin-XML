@@ -1,4 +1,4 @@
-package Padre::Document::XML;
+package Padre::Plugin::XML::Document;
 
 use 5.008;
 use strict;
@@ -6,8 +6,12 @@ use warnings;
 use Carp            ();
 use Padre::Document ();
 
-our $VERSION = '0.03';
+our $VERSION = '0.10';
 our @ISA     = 'Padre::Document';
+
+sub task_syntax {
+	return 'Padre::Task::SyntaxChecker::XML';
+}
 
 sub check_syntax {
 	my $self  = shift;
@@ -47,8 +51,7 @@ sub _check_syntax_internals {
 
 	require Padre::Task::SyntaxChecker::XML;
 	my $task = Padre::Task::SyntaxChecker::XML->new(
-		notebook_page => $self->editor,
-		text => $text,
+		text     => $text,
 		filename => $self->editor->{Document}->filename,
 		( exists $args->{on_finish} ? (on_finish => $args->{on_finish}) : () ),
 	);
